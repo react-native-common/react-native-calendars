@@ -1,11 +1,12 @@
 import React, {Component} from 'react';
 import PropTypes from 'prop-types';
-//import _ from 'lodash';
 import {
   TouchableWithoutFeedback,
   Text,
   View
 } from 'react-native';
+import {shouldUpdate} from '../../../component-updater';
+import isEqual from 'lodash.isequal';
 
 import * as defaultStyle from '../../../style';
 import styleConstructor from './style';
@@ -20,6 +21,7 @@ class Day extends Component {
     marking: PropTypes.any,
 
     onPress: PropTypes.func,
+    onLongPress: PropTypes.func,
     date: PropTypes.object,
 
     markingExists: PropTypes.bool,
@@ -31,26 +33,26 @@ class Day extends Component {
     this.style = styleConstructor(props.theme);
     this.markingStyle = this.getDrawingStyle(props.marking || []);
     this.onDayPress = this.onDayPress.bind(this);
+    this.onDayLongPress = this.onDayLongPress.bind(this);
   }
 
   onDayPress() {
     this.props.onPress(this.props.date);
   }
 
+  onDayLongPress() {
+    this.props.onLongPress(this.props.date);
+  }
+
   shouldComponentUpdate(nextProps) {
     const newMarkingStyle = this.getDrawingStyle(nextProps.marking);
 
-    if (JSON.stringify(this.markingStyle) !== JSON.stringify(newMarkingStyle)) {
+    if (!isEqual(this.markingStyle, newMarkingStyle)) {
       this.markingStyle = newMarkingStyle;
       return true;
     }
 
-    return ['state', 'children'].reduce((prev, next) => {
-      if (prev || nextProps[next] !== this.props[next]) {
-        return true;
-      }
-      return prev;
-    }, false);
+    return shouldUpdate(this.props, nextProps, ['state', 'children', 'onPress', 'onLongPress']);
   }
 
   getDrawingStyle(marking) {
@@ -58,9 +60,9 @@ class Day extends Component {
     if (!marking) {
       return defaultStyle;
     }
-    if (this.props.marking.disabled) {
+    if (marking.disabled) {
       defaultStyle.textStyle.color = this.theme.textDisabledColor;
-    } else if (this.props.marking.selected) {
+    } else if (marking.selected) {
       defaultStyle.textStyle.color = this.theme.selectedDayTextColor;
     }
     const resultStyle = ([marking]).reduce((prev, next) => {
@@ -189,11 +191,13 @@ class Day extends Component {
     }
 
     return (
-      <TouchableWithoutFeedback onPress={this.onDayPress}>
+      <TouchableWithoutFeedback 
+        onPress={this.onDayPress}
+        onLongPress={this.onDayLongPress}>
         <View style={this.style.wrapper}>
           {fillers}
           <View style={containerStyle}>
-            <Text style={textStyle}>{String(this.props.children)}</Text>
+            <Text allowFontScaling={false} style={textStyle}>{String(this.props.children)}</Text>
           </View>
         </View>
       </TouchableWithoutFeedback>

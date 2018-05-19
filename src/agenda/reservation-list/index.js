@@ -179,19 +179,23 @@ class ReactComp extends Component {
 
   render() {
     if (!this.props.reservations || !this.props.reservations[this.props.selectedDay.toString('yyyy-MM-dd')]) {
+      if (this.props.renderEmptyData) {
+        return this.props.renderEmptyData();
+      }
       return (<ActivityIndicator style={{marginTop: 80}}/>);
     }
     return (
       <FlatList
         ref={(c) => this.list = c}
         style={this.props.style}
+        contentContainerStyle={this.styles.content}
         renderItem={this.renderRow.bind(this)}
         data={this.state.reservations}
         onScroll={this.onScroll.bind(this)}
         showsVerticalScrollIndicator={false}
         scrollEventThrottle={200}
         onMoveShouldSetResponderCapture={() => {this.onListTouch(); return false;}}
-        keyExtractor={(item, index) => index}
+        keyExtractor={(item, index) => String(index)}
       />
     );
   }
